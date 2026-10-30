@@ -447,7 +447,7 @@ if Code.ensure_loaded?(Igniter) do
         if Igniter.Project.Deps.has_dep?(igniter, :mdex) do
           {igniter, false}
         else
-          {Igniter.Project.Deps.add_dep(igniter, {:mdex, "~> 0.7"}), true}
+          {Igniter.Project.Deps.add_dep(igniter, {:mdex, "~> 0.14"}), true}
         end
 
       {igniter, install_lumis?} =
@@ -2091,7 +2091,7 @@ if Code.ensure_loaded?(Igniter) do
                         <% end %>
                       </div>
                       <div :if={String.trim(message.text || "") != ""} class="chat-bubble">
-                        <%= to_markdown(message.text || "") %>
+                        <%= to_markdown(message.text || "", auto_close: not message.complete) %>
                       </div>
       #{awaiting_markup("", ~s|~p"#{route}/\#{@conversation.id}"|)}
                     </div>
@@ -2400,10 +2400,11 @@ if Code.ensure_loaded?(Igniter) do
           end
         end
 
-        defp to_markdown(text) do
+        defp to_markdown(text, opts) do
           # Note that you must pass the "unsafe: true" option to first generate the raw HTML
           # in order to sanitize it. https://hexdocs.pm/mdex/MDEx.html#module-sanitize
           MDEx.to_html(text,
+            auto_close: opts[:auto_close],
             extension: [
               strikethrough: true,
               tagfilter: true,
@@ -2637,7 +2638,7 @@ if Code.ensure_loaded?(Igniter) do
                       <% end %>
                     </div>
                     <div :if={String.trim(message.text || "") != ""} class="chat-bubble">
-                      <%= to_markdown(message.text || "") %>
+                      <%= to_markdown(message.text || "", auto_close: not message.complete) %>
                     </div>
       #{awaiting_markup(" phx-target={@myself}", "@return_to")}
                   </div>
@@ -2893,8 +2894,9 @@ if Code.ensure_loaded?(Igniter) do
         end
       end
 
-      defp to_markdown(text) do
+      defp to_markdown(text, opts) do
         MDEx.to_html(text,
+          auto_close: opts[:auto_close],
           extension: [
             strikethrough: true,
             tagfilter: true,

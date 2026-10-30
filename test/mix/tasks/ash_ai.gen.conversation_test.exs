@@ -387,7 +387,7 @@ defmodule Mix.Tasks.AshAi.Gen.ChatTest do
     phx_test_project()
     |> Igniter.compose_task("ash_ai.gen.chat", argv)
     |> assert_has_patch("mix.exs", """
-    + |{:mdex, "~> 0.7"}
+    + |{:mdex, "~> 0.14"}
     """)
     |> assert_has_patch("mix.exs", """
     + |{:lumis, "~> 0.1"}
@@ -396,5 +396,20 @@ defmodule Mix.Tasks.AshAi.Gen.ChatTest do
     + |config :mdex_native, syntax_highlighter: :lumis
     """)
     |> apply_igniter!()
+  end
+
+  test "generated UI closes unfinished Markdown only while streaming", %{argv: argv} do
+    igniter =
+      phx_test_project()
+      |> Igniter.compose_task("ash_ai.gen.chat", argv ++ ["--live", "--live-component"])
+      |> apply_igniter!()
+
+    for path <- ["lib/test_web/live/chat_live.ex", "lib/test_web/chat_component.ex"] do
+      content = igniter.rewrite.sources[path] |> Rewrite.Source.get(:content)
+
+      assert content =~ ~s{to_markdown(message.text || "", auto_close: not message.complete)}
+      assert content =~ "defp to_markdown(text, opts)"
+      assert content =~ "auto_close: opts[:auto_close]"
+    end
   end
 end
